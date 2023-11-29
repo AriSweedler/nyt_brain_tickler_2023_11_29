@@ -6,7 +6,7 @@ from pathlib import Path
 
 def download_dictionary(file_path):
     # Download the file using a 'curl -O' command
-    url = "https://raw.githubusercontent.com/dwyl/english-words/master/words_dictionary.json"
+    url = "https://raw.githubusercontent.com/first20hours/google-10000-english/master/google-10000-english-usa-no-swears-medium.txt"
     import os
     os.system(f"curl {url} -o {file_path}")
     if file_path.exists():
@@ -15,19 +15,25 @@ def download_dictionary(file_path):
     print(f"Failed to download file: {url}")
     exit(1)
 
-
 def ensure_dictionary():
-    # Define a file path right next to the script
-    file_path = Path(__file__).resolve().parent / "words_dictionary.json"
+    file_path = Path(__file__).resolve().parent / "google-10k-english.txt"
 
     # If the file doesn't exist, download it
     if not file_path.exists():
         file_path = download_dictionary(file_path)
 
-    # Read the file as a json dict and return that
+    # Generate each line from the file
     with file_path.open() as f:
-        return json.load(f)
+        for line in f:
+            # Remove the newline character from the end of the line
+            line = line.strip()
 
+            # Skip empty lines
+            if not line:
+                continue
+
+            # Yield the line
+            yield line
 
 def generate_six_letter_words(english_dictionary):
     # Loop through the dictionary and yield words that are 6 letters long
