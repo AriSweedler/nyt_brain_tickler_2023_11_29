@@ -5,6 +5,7 @@ import random
 import json
 from pathlib import Path
 from itertools import combinations
+import argparse
 
 
 def download_dictionary(file_path):
@@ -66,8 +67,8 @@ def hamming_distance(word1, word2):
 
 
 def is_valid_puzzle(answer, word_list):
-    # Only accept puzzles with 3 to 6 words
-    if not 3 <= len(word_list) <= 6:
+    # Only accept puzzles with 3 to 5 words
+    if not 3 <= len(word_list) <= 5:
         return False
 
     # Make sure the hamming distance between each wordpair is at least 2. This
@@ -75,11 +76,6 @@ def is_valid_puzzle(answer, word_list):
     for word_pair in combinations(word_list, 2):
         if hamming_distance(*word_pair) < 2:
             return False
-
-    # Make sure all the words don't end in the same letter
-    last_letters = [word[-1] for word in word_list]
-    if len(set(last_letters)) == 1:
-        return False
 
     # You could add additional checks here - this is where it will take an
     # artists/expert's touch to turn this bland program into something more
@@ -91,20 +87,29 @@ def is_valid_puzzle(answer, word_list):
     # * the answer is all vowels or all consonants
     # * the words are sufficiently different from each other
     #  * The 'blanks' should be in sufficiently different places
+    #  * The 'non-blanks' should be sufficiently different
     return True
 
 
-def print_puzzle(index, answer, words):
-    print(f"Puzzle #{index}. {answer=} - {len(words)} words")
+def print_puzzle(args, answer, words):
+    print(f"Puzzle #{args.puzzle_number}:")
+    if args.answer:
+        print(f"{answer=}")
+
     for word in words:
-        # Replace the answer letters with underscores, but do not replace the same letter twice
+        # Replace the answer letters with underscores, but do not replace the
+        # same letter twice
         tmp_answer = answer
         puzzle_word = word
         for letter in answer:
             puzzle_word = puzzle_word.replace(letter, "_", 1)
             tmp_answer = tmp_answer.replace(letter, "_", 1)
-        print(f"  {word} - {puzzle_word}")
-    print()
+
+        # Print the word
+        if args.answer:
+            print(f"{puzzle_word} - {word}")
+        else:
+            print(f"{puzzle_word}")
 
 
 def find_all_answers():
@@ -148,24 +153,42 @@ def find_all_answers():
     return all_answers
 
 
-if __name__ == "__main__":
-    all_answers = find_all_answers()
+def handle_args(all_answers):
+    # Parse arguments. We accept a '--answer' flag as well as a '--puzzle_number' flag
+    parser = argparse.ArgumentParser(
+        description="Generate a brain tickler puzzle in the style of the Nov. 29th 2023 puzzle."
+    )
+    parser.add_argument(
+        "--answer", action="store_true", help="Print the answer to the puzzle"
+    )
 
-    # If the user gives an arg, then use that as the index.
-    # Else pick one at random
-    index = 1
-    if len(sys.argv) > 1 and sys.argv[1].isdigit():
-        index = int(sys.argv[1])
-    else:
-        print("No valid index given, picking a random puzzle")
-        index = random.randint(0, len(all_answers))
+    parser.add_argument(
+        "-p",
+        "--puzzle_number",
+        type=int,
+        help=f"The puzzle index. Must be between 0 and {len(all_answers)}. If this is not included then a random index will be selected",
+    )
+    args = parser.parse_args()
 
+    # Massage and validate 'args.puzzle_number' into an index into the list of puzzles
+    if args.puzzle_number is None:
+        print("No '--puzzle_number' given. Picking a random puzzle")
+        args.puzzle_number = random.randint(0, len(all_answers))
     # Bounds check
-    if index >= len(all_answers):
-        print(f"Invalid index: {index} - we only found puzzles 0-{len(all_answers)-1}")
+    if args.puzzle_number >= len(all_answers):
+        print(
+            f"Invalid index: {args.puzzle_number} - we only found puzzles 0-{len(all_answers)-1}"
+        )
         exit(1)
 
+    return args
+
+
+if __name__ == "__main__":
+    all_answers = find_all_answers()
+    args = handle_args(all_answers)
+
     # Print out the puzzle
-    answer = list(all_answers.keys())[index]
+    answer = list(all_answers.keys())[args.puzzle_number]
     word_list = all_answers[answer]
-    print_puzzle(index, answer, word_list)
+    print_puzzle(args, answer, word_list)

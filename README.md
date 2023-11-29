@@ -9,12 +9,11 @@ generate as many puzzles as I want (well, my script creates 692 puzzles)
 Clone the repo, then invoke `bt.py` (it stands for "brain tickler").
 ```
 git clone git@github.com:AriSweedler/nyt_brain_tickler_2023_11_29.git
-cd nyt_brain_tickler_2023_11_29
+./nyt_brain_tickler_2023_11_29/bt.py --help
 ```
 
 The `--help` text explains the possible arguments
 
-    ❯ ./nyt_brain_tickler_2023_11_29/bt.py --help
     usage: bt.py [-h] [--answer] [-p PUZZLE_NUMBER]
 
     Generate a brain tickler puzzle in the style of the Nov. 29th 2023 puzzle.
